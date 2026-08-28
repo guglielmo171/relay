@@ -126,4 +126,8 @@
   html {
     @apply font-sans;
   }
+  ::selection {
+    background: var(--accent);
+    color: var(--accent-foreground);
+  }
 }

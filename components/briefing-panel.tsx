@@ -14,7 +14,7 @@ export function BriefingPanel({ player }: BriefingPanelProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-baseline justify-between px-5 pt-4">
+      <div className="flex items-baseline justify-between px-6 pt-5">
         <h2 className="text-sm font-medium">Briefing</h2>
         {script && (
           <span className="text-xs text-muted-foreground">
@@ -24,9 +24,9 @@ export function BriefingPanel({ player }: BriefingPanelProps) {
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="px-5 py-4">
+        <div className="px-6 py-5">
           {script ? (
-            <p className="max-w-[65ch] font-serif text-[15px] leading-relaxed text-foreground/90">
+            <p className="max-w-[65ch] font-serif text-base leading-[1.75] text-foreground/90">
               {script}
             </p>
           ) : (
@@ -39,7 +39,7 @@ export function BriefingPanel({ player }: BriefingPanelProps) {
         </div>
       </ScrollArea>
 
-      <div className="border-t px-5 py-4">
+      <div className="border-t px-6 py-5">
         <BriefingPlayer player={player} />
       </div>
     </div>

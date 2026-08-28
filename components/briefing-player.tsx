@@ -7,7 +7,6 @@ import {
   RotateCcw,
   Square,
 } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -45,7 +44,7 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
       )}
 
       {generating && (
-        <div className="flex items-center justify-between rounded-md border bg-card px-3 py-2.5">
+        <div className="flex items-center justify-between rounded-md border bg-card px-4 py-3">
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-4 animate-spin" />
             Preparing your briefing…
@@ -97,7 +96,7 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
 
       {player.hasAudio && (
         <div
-          className="rounded-md border bg-card px-3 py-3 outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          className="rounded-md border bg-card px-4 py-4 outline-none focus-visible:ring-1 focus-visible:ring-ring"
           tabIndex={0}
           role="group"
           aria-label="Briefing player"
@@ -131,7 +130,7 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
               {formatClock(player.currentTime)} / {formatClock(player.duration)}
             </span>
           </div>
-          <div className="mt-2 flex items-center justify-between">
+          <div className="mt-3 flex items-center justify-between">
             <div className="flex items-center gap-1">
               <Button variant="ghost" size="sm" onClick={player.stop}>
                 <Square className="size-3.5" />
@@ -146,25 +145,25 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
                 {player.speed}×
               </Button>
             </div>
-            <div className="flex items-center gap-2">
-              {player.stale && (
-                <Badge
-                  variant="outline"
-                  className="border-amber-500/40 text-amber-500"
-                >
-                  Script changed
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => void player.generate()}
-                disabled={generating}
-              >
-                <RotateCcw className="size-3.5" />
-                {player.stale ? "Regenerate" : "Replay"}
-              </Button>
-            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => void player.generate()}
+              disabled={generating}
+              title={
+                player.stale
+                  ? "The script changed since this audio was generated"
+                  : "Replay this briefing"
+              }
+              className={
+                player.stale
+                  ? "text-amber-500 hover:text-amber-400"
+                  : undefined
+              }
+            >
+              <RotateCcw className="size-3.5" />
+              {player.stale ? "Regenerate" : "Replay"}
+            </Button>
           </div>
         </div>
       )}

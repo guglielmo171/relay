@@ -23,7 +23,7 @@ export function HandoffList({
 }: HandoffListProps) {
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-center justify-between px-4 py-3">
+      <div className="flex items-center justify-between px-4 py-3.5">
         <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
           Handoffs
         </span>
@@ -39,7 +39,7 @@ export function HandoffList({
       </div>
       <Separator />
       <ScrollArea className="max-h-56 flex-1 lg:max-h-none">
-        <ul className="flex flex-col gap-0.5 p-2">
+        <ul className="flex flex-col gap-1 p-2">
           {handoffs.map((handoff) => {
             const isActive = handoff.id === activeId;
             return (
@@ -48,7 +48,7 @@ export function HandoffList({
                   type="button"
                   onClick={() => onSelect(handoff.id)}
                   className={cn(
-                    "flex w-full flex-col gap-0.5 rounded-md px-3 py-2 text-left transition-colors",
+                    "flex w-full flex-col gap-1 rounded-md px-3 py-2.5 text-left transition-colors",
                     isActive
                       ? "bg-accent text-accent-foreground"
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",

@@ -5,7 +5,6 @@ import { BriefingPanel } from "@/components/briefing-panel";
 import { EmptyState } from "@/components/empty-state";
 import { HandoffEditor } from "@/components/handoff-editor";
 import { HandoffList } from "@/components/handoff-list";
-import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useBriefingPlayer } from "@/hooks/use-briefing-player";
 import { useHandoffs } from "@/hooks/use-handoffs";
@@ -43,21 +42,15 @@ export default function Home() {
 
   return (
     <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
-      <header className="flex h-14 shrink-0 items-center gap-3 border-b px-5">
+      <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b px-6">
         <span className="flex items-center gap-2 text-sm font-semibold tracking-tight">
           <AudioLines className="size-4" />
           Relay
         </span>
         {active && (
-          <>
-            <Separator orientation="vertical" className="h-4" />
-            <span className="truncate text-sm text-muted-foreground">
-              {active.title}
-            </span>
-            <span className="ml-auto shrink-0 text-xs text-muted-foreground">
-              Updated {relativeTime(active.updatedAt)}
-            </span>
-          </>
+          <span className="shrink-0 text-xs text-muted-foreground">
+            Updated {relativeTime(active.updatedAt)}
+          </span>
         )}
       </header>
 
@@ -72,7 +65,7 @@ export default function Home() {
           />
         </aside>
 
-        <main className="min-w-0 flex-1 px-6 py-6 lg:min-h-0 lg:overflow-y-auto">
+        <main className="min-w-0 flex-1 px-6 py-8 sm:px-8 lg:min-h-0 lg:overflow-y-auto lg:px-10">
           {active ? (
             <HandoffEditor
               handoff={active}
@@ -87,7 +80,7 @@ export default function Home() {
         </main>
 
         {active && (
-          <aside className="w-full shrink-0 border-t bg-muted/20 lg:min-h-0 lg:w-[26rem] lg:border-l lg:border-t-0">
+          <aside className="w-full shrink-0 border-t bg-muted/20 lg:min-h-0 lg:w-[28rem] lg:border-l lg:border-t-0 xl:w-[30rem]">
             <BriefingPanel player={player} />
           </aside>
         )}

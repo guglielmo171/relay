@@ -60,31 +60,33 @@ export function HandoffEditor({
 }: HandoffEditorProps) {
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <Input
-        value={handoff.title}
-        onChange={(event) => onRename(event.target.value)}
-        aria-label="Handoff title"
-        placeholder="Name this handoff — e.g. Checkout and payments"
-        className="h-auto border-none bg-transparent px-0 text-xl font-semibold tracking-tight shadow-none focus-visible:ring-0"
-      />
-      <p className="mt-1 text-xs text-muted-foreground">
+      <div className="border-b border-border/50 pb-4 transition-colors focus-within:border-foreground/40">
+        <Input
+          value={handoff.title}
+          onChange={(event) => onRename(event.target.value)}
+          aria-label="Handoff title"
+          placeholder="Name this handoff — e.g. Checkout and payments"
+          className="h-auto border-none bg-transparent px-0 text-2xl font-semibold tracking-tight shadow-none focus-visible:ring-0"
+        />
+      </div>
+      <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
         One item per line. Empty sections stay silent in the briefing.
       </p>
 
-      <div className="mt-6">
+      <div className="mt-8">
         {SECTIONS.map((section, index) => (
           <div key={section.key}>
-            {index > 0 && <Separator className="my-5" />}
-            <div className="flex flex-wrap items-baseline justify-between gap-x-4">
+            {index > 0 && <Separator className="my-7" />}
+            <div>
               <label
                 htmlFor={`section-${section.key}`}
                 className="text-sm font-medium"
               >
                 {section.label}
               </label>
-              <span className="text-xs text-muted-foreground">
+              <p className="mt-0.5 text-xs text-muted-foreground">
                 {section.hint}
-              </span>
+              </p>
             </div>
             <Textarea
               id={`section-${section.key}`}
@@ -94,7 +96,7 @@ export function HandoffEditor({
               }
               placeholder={section.placeholder}
               rows={section.rows}
-              className="mt-2 resize-none bg-transparent text-sm leading-relaxed"
+              className="mt-2.5 resize-none bg-transparent text-sm leading-relaxed"
             />
           </div>
         ))}
