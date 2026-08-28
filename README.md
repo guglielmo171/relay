@@ -185,3 +185,12 @@ Deliberately out of the MVP, in the order they'd earn their way in:
 | `npm run build` | Production build + typecheck |
 | `npm test` | Vitest suite |
 | `npm run lint` | ESLint |
+
+## What Relay demonstrates
+
+- Product-oriented React/Next.js development
+- Server-side third-party API integration
+- Deterministic domain logic instead of unnecessary LLM usage
+- Audio lifecycle and failure-state UX
+- Secure handling of external API credentials
+- Unit and API-boundary testing
