@@ -60,7 +60,7 @@ export function HandoffEditor({
 }: HandoffEditorProps) {
   return (
     <div className="mx-auto w-full max-w-2xl">
-      <div className="border-b border-border/50 pb-4 transition-colors focus-within:border-foreground/40">
+      <div className="border-b border-border/60 pb-4 transition-colors focus-within:border-primary/50">
         <Input
           value={handoff.title}
           onChange={(event) => onRename(event.target.value)}
@@ -74,32 +74,42 @@ export function HandoffEditor({
       </p>
 
       <div className="mt-8">
-        {SECTIONS.map((section, index) => (
-          <div key={section.key}>
-            {index > 0 && <Separator className="my-7" />}
-            <div>
-              <label
-                htmlFor={`section-${section.key}`}
-                className="text-sm font-medium"
-              >
-                {section.label}
-              </label>
-              <p className="mt-0.5 text-xs text-muted-foreground">
-                {section.hint}
-              </p>
+        {SECTIONS.map((section, index) => {
+          const count = handoff[section.key].filter((line) =>
+            line.trim(),
+          ).length;
+          return (
+            <div key={section.key}>
+              {index > 0 && <Separator className="my-7" />}
+              <div>
+                <label
+                  htmlFor={`section-${section.key}`}
+                  className="text-xs font-medium uppercase tracking-wider text-foreground/70"
+                >
+                  {section.label}
+                  {count > 0 && (
+                    <span className="ml-2 font-mono text-[10px] tracking-normal text-muted-foreground">
+                      {count}
+                    </span>
+                  )}
+                </label>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  {section.hint}
+                </p>
+              </div>
+              <Textarea
+                id={`section-${section.key}`}
+                value={handoff[section.key].join("\n")}
+                onChange={(event) =>
+                  onSection(section.key, event.target.value.split("\n"))
+                }
+                placeholder={section.placeholder}
+                rows={section.rows}
+                className="mt-2.5 resize-none bg-card text-sm leading-relaxed"
+              />
             </div>
-            <Textarea
-              id={`section-${section.key}`}
-              value={handoff[section.key].join("\n")}
-              onChange={(event) =>
-                onSection(section.key, event.target.value.split("\n"))
-              }
-              placeholder={section.placeholder}
-              rows={section.rows}
-              className="mt-2.5 resize-none bg-transparent text-sm leading-relaxed"
-            />
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

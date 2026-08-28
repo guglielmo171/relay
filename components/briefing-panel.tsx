@@ -14,19 +14,21 @@ export function BriefingPanel({ player }: BriefingPanelProps) {
 
   return (
     <div className="flex h-full flex-col">
-      <div className="flex items-baseline justify-between px-6 pt-5">
-        <h2 className="text-sm font-medium">Briefing</h2>
+      <div className="flex items-baseline justify-between border-b px-6 py-4">
+        <h2 className="text-xs font-medium uppercase tracking-wider text-foreground/70">
+          Briefing
+        </h2>
         {script && (
-          <span className="text-xs text-muted-foreground">
-            about {formatClock(estimatedSeconds)} to hear
+          <span className="font-mono text-xs text-muted-foreground">
+            ~{formatClock(estimatedSeconds)}
           </span>
         )}
       </div>
 
       <ScrollArea className="min-h-0 flex-1">
-        <div className="px-6 py-5">
+        <div className="px-6 py-6">
           {script ? (
-            <p className="max-w-[65ch] font-serif text-base leading-[1.75] text-foreground/90">
+            <p className="max-w-[65ch] font-serif text-[17px] leading-8 text-foreground/90">
               {script}
             </p>
           ) : (

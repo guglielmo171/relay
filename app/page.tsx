@@ -44,11 +44,11 @@ export default function Home() {
     <div className="flex min-h-screen flex-col lg:h-screen lg:overflow-hidden">
       <header className="flex h-14 shrink-0 items-center justify-between gap-3 border-b px-6">
         <span className="flex items-center gap-2 text-sm font-semibold tracking-tight">
-          <AudioLines className="size-4" />
+          <AudioLines className="size-4 text-primary" />
           Relay
         </span>
         {active && (
-          <span className="shrink-0 text-xs text-muted-foreground">
+          <span className="shrink-0 font-mono text-xs text-muted-foreground">
             Updated {relativeTime(active.updatedAt)}
           </span>
         )}
@@ -80,7 +80,7 @@ export default function Home() {
         </main>
 
         {active && (
-          <aside className="w-full shrink-0 border-t bg-muted/20 lg:min-h-0 lg:w-[28rem] lg:border-l lg:border-t-0 xl:w-[30rem]">
+          <aside className="w-full shrink-0 border-t bg-card/50 lg:min-h-0 lg:w-[28rem] lg:border-l lg:border-t-0 xl:w-[30rem]">
             <BriefingPanel player={player} />
           </aside>
         )}

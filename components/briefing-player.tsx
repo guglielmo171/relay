@@ -46,7 +46,7 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
       {generating && (
         <div className="flex items-center justify-between rounded-md border bg-card px-4 py-3">
           <span className="flex items-center gap-2 text-sm text-muted-foreground">
-            <Loader2 className="size-4 animate-spin" />
+            <Loader2 className="size-4 animate-spin text-primary" />
             Preparing your briefing…
           </span>
           <Button variant="ghost" size="sm" onClick={player.stop}>
@@ -126,7 +126,7 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
               aria-label="Seek"
               className="flex-1"
             />
-            <span className="shrink-0 text-xs tabular-nums text-muted-foreground">
+            <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
               {formatClock(player.currentTime)} / {formatClock(player.duration)}
             </span>
           </div>
@@ -157,7 +157,7 @@ export function BriefingPlayer({ player }: BriefingPlayerProps) {
               }
               className={
                 player.stale
-                  ? "text-amber-500 hover:text-amber-400"
+                  ? "text-primary hover:text-primary/80"
                   : undefined
               }
             >

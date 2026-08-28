@@ -10,8 +10,8 @@ export function EmptyState({ onLoadSample, onStartScratch }: EmptyStateProps) {
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6">
       <div className="flex w-full max-w-md flex-col items-center text-center">
-        <div className="mb-6 flex size-14 items-center justify-center rounded-2xl border bg-card">
-          <AudioLines className="size-6" />
+        <div className="mb-6 flex size-14 items-center justify-center rounded-2xl border border-primary/25 bg-card">
+          <AudioLines className="size-6 text-primary" />
         </div>
         <h1 className="text-2xl font-semibold tracking-tight">Relay</h1>
         <p className="mt-1 text-lg">Catch up before you code.</p>

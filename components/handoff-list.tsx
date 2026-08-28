@@ -28,7 +28,7 @@ export function HandoffList({
           Handoffs
         </span>
         <Button
-          variant="ghost"
+          variant="outline"
           size="icon"
           className="size-7"
           onClick={onCreate}
@@ -54,15 +54,23 @@ export function HandoffList({
                       : "text-muted-foreground hover:bg-accent/50 hover:text-foreground",
                   )}
                 >
-                  <span
-                    className={cn(
-                      "truncate pr-6 text-sm",
-                      isActive && "font-medium",
-                    )}
-                  >
-                    {handoff.title}
+                  <span className="flex items-center gap-2">
+                    <span
+                      className={cn(
+                        "size-1.5 shrink-0 rounded-full",
+                        isActive ? "bg-primary" : "bg-transparent",
+                      )}
+                    />
+                    <span
+                      className={cn(
+                        "truncate pr-6 text-sm",
+                        isActive && "font-medium",
+                      )}
+                    >
+                      {handoff.title}
+                    </span>
                   </span>
-                  <span className="text-xs text-muted-foreground">
+                  <span className="pl-3.5 font-mono text-[11px] text-muted-foreground">
                     {relativeTime(handoff.updatedAt)}
                   </span>
                 </button>
