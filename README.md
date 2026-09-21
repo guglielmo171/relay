@@ -2,195 +2,198 @@
 
 **Catch up before you code.**
 
-Relay is a voice-first handoff tool for engineers. When you resume work after
-a context switch, the information you need is usually fragmented across
-messages, tickets, and memory. Relay turns a structured technical handoff —
-what changed, what's blocked, what's waiting on you, what's next — into a
-short spoken briefing you can listen to before you start working.
+Relay is a voice-first handoff tool for software engineers. It turns a structured technical handoff — what changed, what's blocked, what's waiting on you and what's next — into a short spoken briefing designed for context recovery after a switch in work.
 
-> Here's your handoff for Checkout and payments. Since your last session: The
-> authentication refactor was deployed to production yesterday. … Your first
-> priority today: validate the checkout regression on staging.
+[Live Demo](https://relay-swart-omega.vercel.app)
 
-Built with Next.js (App Router), React, TypeScript, shadcn/ui, and the
-ElevenLabs Text to Speech API.
+Built with Next.js App Router, React, TypeScript, shadcn/ui and the ElevenLabs Text to Speech API.
 
 ---
 
-## Why voice
+## Engineering snapshot
 
-Reading a handoff and *hearing* one are different jobs. A form dumps
-equal-weight fields on you; a spoken briefing is linear, time-boxed, and
-forced to pick a first priority. Relay's voice layer exists to deliver
-**order and emphasis**, while the structured editor stays on screen for
-facts and detail. The product is designed to still make sense if you never
-learn ElevenLabs is underneath it.
+Relay is intentionally small in scope, but the frontend and integration work is not just a static UI demo.
+
+- **Frontend lifecycle** — explicit idle, generating, playing, paused and error states around an `HTMLAudioElement`-based player.
+- **Cancellation and cleanup** — `AbortController` cancels in-flight generation; request aborts are propagated to the upstream audio stream; object URLs and audio state are cleaned up when they are no longer needed.
+- **Bounded session caching** — generated audio is cached by compiled-script content with a fixed cache limit and URL revocation on eviction.
+- **Stale-state handling** — editing a handoff after audio generation marks the existing audio stale and changes the next action from replay to regenerate.
+- **Client/server boundary** — the browser owns editing, local persistence and playback; a Next.js Route Handler owns provider credentials, payload validation, server-side compilation and provider-error mapping.
+- **Deterministic product logic** — a plain TypeScript compiler turns structured handoff data into a bounded spoken script instead of delegating the core behaviour to an LLM.
+- **Behaviour-oriented tests** — Vitest covers compiler rules, validation and the server API boundary, including missing configuration, provider failures and the optional public-demo gate.
 
 ## The product in one loop
 
-1. Write (or load the sample) structured handoff — one item per line.
-2. Watch the spoken script compile live as you type. No LLM, no wait.
-3. Press **Listen to briefing**. Audio streams from ElevenLabs and plays.
-4. Pause, stop, scrub, change speed, or edit and regenerate. Editing marks
-   the audio stale; replaying an unchanged script never re-calls the API.
+1. Write a structured handoff, or load the sample.
+2. Watch the spoken script compile live as the handoff changes.
+3. Generate the briefing through the server-side TTS boundary.
+4. Play, pause, seek, change speed or stop the audio.
+5. Edit the handoff and regenerate only when the compiled script has changed.
+
+The voice layer is useful because a spoken briefing is linear and prioritised: the structured editor keeps the full detail on screen, while the briefing is forced to surface what matters first.
+
+## Key engineering decisions
+
+### Deterministic compiler instead of an LLM
+
+The core product behaviour is deterministic. `lib/briefing/compile.ts` converts structured fields into a short script with explicit rules:
+
+- empty sections are omitted;
+- bullets are capped per section;
+- detail is progressively reduced to stay within the script character budget;
+- the briefing closes on the first next action, or falls back to the most urgent blocker / waiting item;
+- developer terminology is normalised for speech.
+
+An LLM could be added later as an optional refinement layer, but it is not required to make the core product useful or testable.
+
+### TTS instead of conversational AI
+
+Relay is a briefing tool, not a chatbot. The complete script already exists before audio generation, so a text-to-speech request matches the product better than an agent or open-ended conversational layer.
+
+### HTTP boundary instead of a persistent WebSocket
+
+`POST /api/briefing/speak` validates the structured handoff, compiles the script again on the server and requests the audio stream. The provider credential remains server-side.
+
+A persistent WebSocket connection would add lifecycle complexity without solving a current product need because the full briefing input is already available at request time.
+
+### Session cache instead of repeated provider calls
+
+Generated audio is cached in-session by script content. Replaying an unchanged briefing reuses the existing object URL rather than requesting the provider again. The cache is bounded, and evicted object URLs are revoked.
+
+When generation is stopped or the user switches handoffs, active work is cancelled and playback state is reset.
+
+### Explicit boundaries instead of architecture for show
+
+Relay deliberately has no database, user account system, queue or generic provider abstraction. Handoffs are persisted in `localStorage`; generated audio and playback state are ephemeral.
+
+Those boundaries keep the implementation proportional to the product while still making server trust boundaries, validation, failure mapping and browser lifecycle explicit.
+
+## Architecture
+
+```text
+Handoff form ──▶ compileBriefing (shared, deterministic)
+                      │
+                      ├─▶ live script preview (client)
+                      └─▶ POST /api/briefing/speak (server, Node runtime)
+                               │  validate → compile → provider request
+                               ▼
+                     ElevenLabs textToSpeech.stream
+                               │  audio/mpeg
+                               ▼
+                    client Blob + object URL
+                               │
+                               ▼
+                 bounded session cache + HTMLAudioElement
+```
+
+| Client owns | Server owns |
+| --- | --- |
+| Editor, handoff list, live script preview | ElevenLabs SDK + API key |
+| `localStorage` persistence | Payload validation |
+| Audio lifecycle, seek/speed controls, stale-state detection | Server-side script compilation |
+| AbortController, session audio cache, object-URL cleanup | Provider error mapping + optional unlock gate |
+
+The browser sends structured handoff data, not arbitrary freeform TTS text. The server validates that boundary and compiles the final provider input itself.
+
+## Testing
+
+`npm test` runs Vitest over the parts that carry product risk.
+
+### Compiler behaviour
+
+Coverage includes:
+
+- empty-section omission;
+- priority close and blocker fallback;
+- per-section bullet limits;
+- developer-jargon normalisation;
+- script character-budget behaviour;
+- the sample handoff as a complete compiler scenario.
+
+### API boundary
+
+The TTS Route Handler is tested with the provider client mocked. Tests cover:
+
+- invalid / empty request bodies;
+- successful audio responses;
+- missing provider configuration;
+- provider rate-limit failure mapping;
+- the optional `RELAY_APP_SECRET` gate.
+
+The final audio-quality check stays manual by design: hearing whether the generated briefing is useful is a product judgement, not something a unit assertion can prove.
+
+## Design and UX states
+
+Relay uses a dark, neutral, editorial interface where the briefing is the primary output and the editor remains a quieter working surface.
+
+The player treats lifecycle states as explicit UX states rather than a generic loading spinner:
+
+- idle;
+- generating, with a stop action;
+- playing / paused;
+- provider or network error with retry;
+- locked public-demo state with an unlock form;
+- stale generated audio after the underlying handoff changes.
+
+Playback includes pause/play, seek, stop, speed cycling and regenerate/replay behaviour.
 
 ## Quickstart
 
 ```bash
 npm install
-cp .env.example .env.local   # then paste your ElevenLabs key
+cp .env.example .env.local
 npm run dev
 ```
 
-Open http://localhost:3000 and choose **Load the sample handoff**.
+Open `http://localhost:3000` and choose **Load the sample handoff**.
 
 ### Environment
 
 | Variable | Required | Purpose |
 | --- | --- | --- |
-| `ELEVENLABS_API_KEY` | for voice | Server-side only. Never exposed to the client bundle. |
-| `ELEVENLABS_VOICE_ID` | no | Override the curated default voice with any premade voice ID. |
-| `RELAY_APP_SECRET` | no | When set, voice generation requires a one-time unlock per browser. Recommended for public deploys so strangers can't spend your credits. |
+| `ELEVENLABS_API_KEY` | For voice generation | Server-side provider credential. |
+| `ELEVENLABS_VOICE_ID` | No | Overrides the default voice. |
+| `RELAY_APP_SECRET` | No | Optional gate for voice generation on a public deployment. |
 
-Without a key, the editor and live script preview still work — the app tells
-you exactly what is missing instead of failing mysteriously.
-
-## How ElevenLabs is used
-
-Deliberate choices, not defaults:
-
-- **TTS, not Conversational AI.** Relay is a briefing, not a chatbot. The
-  `text-to-speech` endpoint is the right tool; an agent would be demo
-  frosting on the wrong product.
-- **`eleven_flash_v2_5`.** A briefing is requested while a user is waiting,
-  so time-to-first-audio matters more than studio fidelity. Flash's ~75 ms
-  inference and 40k-character headroom fit a ~60-second brief perfectly, at
-  half the per-character cost of Multilingual v2.
-- **HTTP streaming through a Route Handler.** `POST /api/briefing/speak`
-  validates the payload, compiles the script server-side, and pipes the
-  SDK's stream straight to the client as `audio/mpeg`. The API key never
-  leaves the server. WebSocket stream-input is intentionally skipped: the
-  full script already exists, so a persistent connection buys nothing.
-- **Latency honesty.** The client collects the short stream into a blob
-  before playback, which keeps MP3 decoding reliable across browsers. The
-  generating state is designed and brief; if a measured wait ever exceeds
-  ~3 s, the upgrade path is progressive playback, not a spinner.
-- **Cost respect.** Generated audio is cached in-session keyed by script
-  content, so replaying an unchanged briefing is free. Stop aborts the
-  in-flight request — including the upstream ElevenLabs stream.
-- **Speech normalization.** Flash's text normalization is minimal, so the
-  compiler pre-processes developer jargon: `PR #412` becomes "pull request
-  412", `checkoutFlow` becomes "checkout flow", URLs reduce to their spoken
-  host.
-
-## The compiler is the product
-
-There is no LLM in the loop. `lib/briefing/compile.ts` deterministically
-turns structured fields into a ~45–90 second script:
-
-- Empty sections are omitted, not padded.
-- Bullets are capped per section; the script progressively sheds detail to
-  stay under its character budget.
-- It opens with orientation ("Here's your handoff for …") and always closes
-  on the first priority — or the most urgent blocker when no next action
-  exists.
-
-This makes the briefing testable, instant, offline-demoable, and free of
-generic-assistant drift. An LLM "tighten this" pass is a plausible future
-layer, not a foundation.
-
-## Architecture
-
-```
-Handoff form ──▶ compileBriefing (shared, deterministic)
-                      │
-                      ├─▶ live script preview (client)
-                      └─▶ POST /api/briefing/speak (server, Node runtime)
-                               │  validate → compile → stream
-                               ▼
-                     ElevenLabs textToSpeech.stream
-                               │  audio/mpeg
-                               ▼
-                 session-cached blob ▶ HTMLAudioElement player
-```
-
-| Client owns | Server owns |
-| --- | --- |
-| Editor, list, script preview, player | ElevenLabs SDK + API key |
-| `localStorage` persistence | Payload validation, script compile |
-| Abort, session audio cache, playback UX | Provider error mapping, optional unlock gate |
-
-No database, no auth system, no queue, no provider abstraction. The state
-that survives a refresh is the handoffs themselves; everything else is
-deliberately ephemeral.
+Without an ElevenLabs API key, the editor and deterministic live script preview still work; voice generation returns an explicit configuration error.
 
 ## Project structure
 
-```
+```text
 app/
   page.tsx                     single-screen workspace
-  api/briefing/speak/route.ts  TTS boundary (server-only)
-  api/unlock/route.ts          optional secret unlock
+  api/briefing/speak/route.ts  server-side TTS boundary
+  api/unlock/route.ts          optional public-demo unlock
 components/
-  handoff-editor.tsx           structured sections, one item per line
+  handoff-editor.tsx           structured handoff editing
   handoff-list.tsx             recent handoffs
-  briefing-panel.tsx           script preview + player column
-  briefing-player.tsx          play/pause/stop/seek/speed/regenerate
+  briefing-panel.tsx           script preview + player
+  briefing-player.tsx          player states and controls
   empty-state.tsx
 hooks/
-  use-handoffs.ts              localStorage-backed state
-  use-briefing-player.ts       audio lifecycle, cache, aborts
+  use-handoffs.ts              localStorage-backed handoff state
+  use-briefing-player.ts       audio lifecycle, cache, aborts and cleanup
 lib/
-  briefing/compile.ts          the spoken-script compiler (core logic)
-  briefing/normalize.ts        jargon → speech-friendly text
-  handoffs/                    schema, sample, store
-  elevenlabs/                  client factory, error mapping
+  briefing/compile.ts          deterministic spoken-script compiler
+  briefing/normalize.ts        speech-friendly developer terminology
+  handoffs/                    schema, sample and persistence helpers
+  elevenlabs/                  provider client and error mapping
 ```
-
-## Testing
-
-`npm test` runs Vitest over the parts that carry product risk:
-
-- **Compiler** — section skipping, priority close, bullet caps, character
-  budget, speech normalization, the sample handoff end-to-end.
-- **Validation** — empty/oversized/malformed handoffs.
-- **API boundary** — invalid bodies, missing key, provider 429/5xx mapping,
-  and the optional secret gate, with the ElevenLabs client mocked.
-
-The last mile is manual by design: generate the sample briefing and listen
-to it. Voice quality is a human judgment, not an assertion.
-
-## Design
-
-Dark-first, neutral, editorial. The briefing column is the hero; the editor
-is a quiet working surface. shadcn/ui provides the component foundation;
-the script preview is set in a serif face to distinguish *the spoken word*
-from working text. All five player states (idle, generating, playing,
-paused, error/locked) are designed states, not leftover spinners.
-
-## Roadmap
-
-Deliberately out of the MVP, in the order they'd earn their way in:
-
-1. GitHub ingestion (recent PRs/reviews pre-fill the handoff)
-2. Optional LLM "tighten" pass on the compiled script
-3. Progressive playback (MediaSource) if measured wait demands it
-4. Shareable handoff links
 
 ## Scripts
 
-| Command | What it does |
+| Command | Purpose |
 | --- | --- |
-| `npm run dev` | Dev server |
-| `npm run build` | Production build + typecheck |
-| `npm test` | Vitest suite |
-| `npm run lint` | ESLint |
+| `npm run dev` | Start the development server |
+| `npm run build` | Production build + TypeScript validation |
+| `npm test` | Run the Vitest suite |
+| `npm run lint` | Run ESLint |
 
-## What Relay demonstrates
+## Roadmap
 
-- Product-oriented React/Next.js development
-- Server-side third-party API integration
-- Deterministic domain logic instead of unnecessary LLM usage
-- Audio lifecycle and failure-state UX
-- Secure handling of external API credentials
-- Unit and API-boundary testing
+Deliberately outside the current MVP, in the order they would need to justify their complexity:
+
+1. GitHub ingestion to pre-fill recent engineering context;
+2. optional LLM refinement after deterministic compilation;
+3. progressive playback if measured waiting time warrants it;
+4. shareable handoff links.
